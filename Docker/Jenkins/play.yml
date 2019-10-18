@@ -1,0 +1,5 @@
+---
+- hosts: containers
+  tasks:
+    - name: Include task list in play
+      include_tasks: setup_jenkins.yml

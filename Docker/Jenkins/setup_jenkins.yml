@@ -1,0 +1,28 @@
+---
+# install and setup jenkins
+
+- name: Install prereqs
+  shell: |
+    yum install docker -y
+    yum install java-1.8.0-openjdk-devel -y
+
+- name: Install Jenkins
+  shell: |
+    curl --silent --location http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo | sudo tee /etc/yum.repos.d/jenkins.repo
+    rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
+    yum install jenkins -y
+
+- name: Install Nginx
+  shell: |
+    yum install epel-release -y
+    yum install nginx -y
+    systemctl start nginx
+    firewall-cmd --permanent --zone=public --add-service=http
+    firewall-cmd --permanent --zone=public --add-service=https
+    firewall-cmd --reload
+
+- name: Enable Nginx
+  shell: systemctl enable nginx
+
+- name: Create jenkins user for Docker
+  shell: usermod -aG docker jenkins && systemctl restart jenkins
