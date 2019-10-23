@@ -26,4 +26,3 @@ pub_key: "{{ pubkey }}"
       shell: echo '{{ pub_ley }}' > /home/{{ username }}/.ssh/authorized_keys
     - name: Ensure permissions
       shell: chown -R {{ username }}:wheel /home/{{ username }}/
-[root@ansible-master playbooks]#
