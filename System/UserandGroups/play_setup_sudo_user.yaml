@@ -1,0 +1,29 @@
+---
+username: "{{ user }}"
+pub_key: "{{ pubkey }}"
+- name: Setup users on all hosts
+  hosts: all
+  become: true
+  tasks:
+    - name: Make sure we have a 'wheel' group
+      group:
+        name: wheel
+        state: present
+    - name: Allow 'wheel' group to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+    - name: Setup Ansible User
+      action: user name={{ username }} group=root state=present groups=wheel append=yes
+    - name: Create ssh directory
+      shell: |
+        mkdir -p /home/{{ username }}/.ssh/
+        touch /home/{{ username }}/.ssh/authorized_keys
+    - name: Add public key
+      shell: echo '{{ pub_ley }}' > /home/{{ username }}/.ssh/authorized_keys
+    - name: Ensure permissions
+      shell: chown -R {{ username }}:wheel /home/{{ username }}/
+[root@ansible-master playbooks]#
