@@ -1,0 +1,47 @@
+---
+# install and setup decouvrir
+
+- name: Ensure Python 3.6 is installed
+  action: >
+    yum name=python36 state=latest update_cache=yes
+
+- name: Make sure Python 3.6 is up to date
+    yum: name=python36 state=latest update_cache=yes
+    when: ansible_distribution == "CentOS"
+
+- name: Install pip3
+  yum: name=python3-pip.noarch state=latest update_cache=yes
+  when: ansible_distribution == "CentOS"
+
+- git:
+    repo: https://github.com/Remillardj/decouvrir
+    dest: /usr/local/var/www/
+    update: yes
+
+- name: Install requirements for decouvrir
+  shell: pip3 install /usr/local/var/www/decouvrir/requirements.txt
+
+- name: Get running process list from previous nohup
+  ignore_errors: yes
+  shell: "ps -few | grep app.py | awk '{print $2}'"
+  register: running_processes
+
+- name: Kill running process
+  ignore_errors: yes
+  shell: "kill {{ item }}"
+  with_items: "{{ running_processes.stdout_lines }}"
+
+- wait_for:
+    path: "/proc/{{ item }}/status"
+    state: absent
+  with_items: "{{ running_processes.stdout_lines }}"
+  ignore_errors: yes
+  register: crunchify_processes
+
+- name: Force kill stuck processes
+  ignore_errors: yes
+  shell: "kill -9 {{ item }}"
+  with_items: "{{ crunchify_processes.results | select('failed') | map(attribute='item') | list }}"
+
+- name: Start script
+  shell: nohup python36 /usr/local/var/www/decouvrir/app.py
